@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <!-- Libraries -->
+    <title>SWEN40004 - Assignment 2</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script type="text/javascript" src="lib/require.js"></script>
+    <script type="text/javascript" src="lib/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/crafty.js"></script>
+    <!-- Chart Libraries -->
+    <link href="lib/charts/src/nv.d3.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="lib/charts/lib/d3.v2.js"></script>
+    <script type="text/javascript" src="lib/charts/nv.d3.js"></script>
+    <script type="text/javascript" src="lib/charts/src/tooltip.js"></script>
+    <script type="text/javascript" src="lib/charts/src/utils.js"></script>
+    <script type="text/javascript" src="lib/charts/src/models/legend.js"></script>
+    <script type="text/javascript" src="lib/charts/src/models/axis.js"></script>
+    <script type="text/javascript" src="lib/charts/src/models/scatter.js"></script>
+    <script type="text/javascript" src="lib/charts/src/models/line.js"></script>
+    <script type="text/javascript" src="lib/charts/src/models/lineChart.js"></script>
+    <!-- Our resources -->
+    <script type="text/javascript" src="fire.js"></script>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<div class="main">
+    <div class="left">
+        <div id="results">
+            <a id="close_results">Close</a>
+
+            <h2>Results</h2>
+
+            <p>Click on the name of the series in the top right of the charts to toggle.</p>
+
+            <div id="charts">
+            </div>
+        </div>
+        <div id="border"></div>
+        <div id="cr-stage"></div>
+    </div>
+    <div class="right">
+        <div>
+            <h1>Bushfire Cellular Automaton</h1>
+            <p class="text-center"><a href="Report.pdf">Read The Report</a></p>
+
+            <div class="control-panel">
+                <div class="fire-controls">
+                    <div class="fire-params">
+                        <div class="control-group control-row">
+                            <div class="btn-group">
+                                <button id="btn-start-stop" class="btn btn-primary " title="Play/Pause"><i
+                                        class="icon-play icon-white"></i></button>
+                            </div>
+                            <button id="btn-restart" class="btn btn-danger" title="Restart the automaton">Restart
+                            </button>
+                            <div class="control-group">
+                                <div class="input-prepend" title="Lambda">
+                                    <span class="add-on">&lambda;</span>
+                                    <input id="lambda" class="input-tiny" type="text" value="1"/>
+                                </div>
+                            </div>
+                            <div class="input-prepend" title="Gamma">
+                                <span class="add-on">&gamma;</span>
+                                <select id="gamma" class="input-mini">
+                                    <option value="10">10</option>
+                                    <option value="100">100</option>
+                                    <option value="1000">1,000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- TODO implement support for burn with scale -->
+                        <div id="btn-group" class="control-group control-row" style="display: none">
+                            <button id="btn-burn" class="btn btn-warning" title="Manually burn a tree at X,Y">Burn
+                            </button>
+                            <!--<label class="control-label" for="burn-buttons">@</label>-->
+                            <div class="controls">
+                                <div class="input-prepend"
+                                     title="X-coord (you can click on the area to get this automatically)">
+                                    <span class="add-on">X</span><input id="burn_x" type="text" class="input-tiny"/>
+                                </div>
+                                <div class="input-prepend"
+                                     title="Y-coord (you can click on the area to get this automatically)">
+                                    <span class="add-on">Y</span><input id="burn_y" type="text" class="input-tiny"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group control-row">
+                        <div class="input-prepend" title="The width and height of the lattice.">
+                            <span class="add-on">Size</span><input id="size" type="text" class="input-tiny"
+                                                                   value="40"/>
+                        </div>
+                        <div class="input-prepend" title="Number of milliseconds to wait between Time Steps">
+                            <span class="add-on">Freq.</span><input id="freq" type="text" class="input-tiny"
+                                                                    value="1"/>
+                        </div>
+                        <div class="input-prepend" title="The number of Time Steps until the automaton will stop">
+                            <span class="add-on">Target</span><input id="target" type="text" class="input-tiny"
+                                                                     value="500"/>
+                        </div>
+                    </div>
+                    <div class="cell-alg-options">
+                        <div class="heading">Neighbourhood</div>
+                        <label class="radio" title="Von Neumann's cell adjacency algorithm">
+                            <input type="radio" id="neumann" name="cell_algorithm[]" value="0"/>
+                            Neumann
+                        </label>
+                        <label class="radio" title="Moore's cell adjacency algorithm">
+                            <input type="radio" id="moore" name="cell_algorithm[]"  checked="checked" value="1"/>
+                            Moore
+                        </label>
+                    </div>
+
+                    <div class="cell-alg-options">
+                        <div class="heading">Tree Growth</div>
+                        <label class="radio" title="Grow trees with an equally random probability for every cell">
+                            <input type="radio" id="growth_random" name="tree_growth[]" value="0"/>
+                            Random
+                        </label>
+                        <label class="radio"
+                               title="Grow trees with the probability proportional to the number of neighbouring trees">
+                            <input type="radio" id="growth_proximity_tree" name="tree_growth[]" checked="checked" value="1"/>
+                            Proximity
+                        </label>
+                    </div>
+                    <div id="proximity-values-tree" class="proximity-values control-group control-row">
+                        <div class="input-prepend">
+                            <span class="add-on">P<sub>low</sub></span><input id="prox_low_tree" type="text"
+                                                                              class="input-tiny" value="0.01"/>
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on">P<sub>high</sub></span><input id="prox_high_tree" type="text"
+                                                                               class="input-tiny" value="0.2"/>
+                        </div>
+                    </div>
+
+                    <div class="cell-alg-options">
+                        <div class="heading">Fire Spread</div>
+                        <label class="radio" title="Fire starts instantly, burning all neighbourhood trees.">
+                            <input type="radio" id="growth_instant_fire" name="fire_spread[]" 
+                                   value="0"/>
+                            Instant
+                        </label>
+                        <label class="radio"
+                               title="Fire starts based on proximity to fire.">
+                            <input type="radio" id="growth_proximity_fire" name="fire_spread[]" checked="checked"value="1"/>
+                            Proximity
+                        </label>
+                    </div>
+                    <div id="proximity-values-fire" class="proximity-values control-group control-row">
+                        <div class="input-prepend">
+                            <span class="add-on">P<sub>low</sub></span><input id="prox_low_fire" type="text"
+                                                                              class="input-tiny" value="0.5"/>
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on">P<sub>high</sub></span><input id="prox_high_fire" type="text"
+                                                                               class="input-tiny" value="0.8"/>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <table class="table">
+                <tr>
+                    <td colspan="4" class="heading">Counter</td>
+                </tr>
+                <tr>
+                    <td>Trees</td>
+                    <td class="info-val"><span id="tree_count" class="badge badge-success"></span></td>
+                    <td>Fires</td>
+                    <td class="info-val"><span id="fire_count" class="badge badge-important"></span></td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="heading">Stats</td>
+                </tr>
+                <tr>
+                    <td>G Value</td>
+                    <td class="info-val"><span id="g_value" class="badge">0</span></td>
+                    <td>F Value</td>
+                    <td class="info-val"><span id="f_value" class="badge"></span></td>
+                </tr>
+                <tr>
+                    <td>Time Step</td>
+                    <td class="info-val"><span id="time_step" class="badge"></span></td>
+                </tr>
+            </table>
+
+            <label class="checkbox"
+                   title="Whether to visualise the automaton on screen. Disabling increases efficiency.">
+                <input type="checkbox" id="visualise" checked="checked"/>
+                Visualise
+            </label>
+
+            <label class="checkbox"
+                   title="Whether to automatically show the graphed results.">
+                <input type="checkbox" id="showgraph" checked="checked"/>
+                Automatically Show Graphs
+            </label>
+
+            <div id="log-box" class="log"></div>
+            <div class="footer">
+                <p>By Kim and Aram, 2013</p>
+
+                <p>SWEN40004 - Assignment 2</p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
